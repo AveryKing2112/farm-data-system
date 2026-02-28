@@ -112,7 +112,7 @@ def add_crop():
     conn, cur = connect()
     cur.execute("""
         INSERT INTO crops (common_name, variety, species, seed_source, days_to_maturity, is_perennial, notes)
-        VALUES (%s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
     """, (common_name, variety, species, seed_source, days_to_maturity, perennial.lower() == "y", notes))
     close(conn, cur)
     print(f"  Crop '{common_name} - {variety}' added successfully.")
