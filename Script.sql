@@ -1,0 +1,1 @@
+SELECT create_hypertable('weather_metrics', 'time');
