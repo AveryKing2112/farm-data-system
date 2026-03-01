@@ -136,13 +136,15 @@ def add_grow_cycle():
         return
 
     start_date = prompt_date("Start date", required=True)
+    is_control = prompt("Is this a control group? (y/n)", default="n")
+    is_control = is_control.lower() == "y"
     transplant_date = prompt_date("Transplant date")
     expected_harvest = prompt_date("Expected harvest date")
 
     cur.execute("""
-        INSERT INTO grow_cycles (plot_id, crop_id, status, start_date, transplant_date, expected_harvest_date)
-        VALUES (%s, %s, 'active', %s, %s, %s)
-    """, (plot_id, crop_id, start_date, transplant_date, expected_harvest))
+        INSERT INTO grow_cycles (plot_id, crop_id, status, start_date, is_control, transplant_date, expected_harvest_date)
+        VALUES (%s, %s, 'active', %s, %s, %s, %s)
+    """, (plot_id, crop_id, start_date, is_control, transplant_date, expected_harvest))
     close(conn, cur)
     print("  Grow cycle added successfully.")
 
@@ -174,11 +176,12 @@ def log_observation():
     value_numeric = prompt_float("Numeric value (if applicable)")
     value_text = prompt("Text observation", required=False)
     notes = prompt("Notes", required=False)
-
+    plant_label = prompt("Plant label (e.g. plant 1, or leave blank for whole row)", required=False)
+    
     cur.execute("""
-        INSERT INTO observations (grow_cycle_id, observed_at, observation_type, value_numeric, value_text, notes)
-        VALUES (%s, %s, %s, %s, %s, %s)
-    """, (gc_id, datetime.now(), obs_type, value_numeric, value_text, notes))
+        INSERT INTO observations (grow_cycle_id, observed_at, observation_type, value_numeric, value_text, plant_label, notes)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+    """, (gc_id, datetime.now(), obs_type, value_numeric, value_text, plant_label, notes))
     close(conn, cur)
     print("  Observation logged successfully.")
 
