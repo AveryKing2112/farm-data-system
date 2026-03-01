@@ -138,13 +138,19 @@ def add_grow_cycle():
     start_date = prompt_date("Start date", required=True)
     is_control = prompt("Is this a control group? (y/n)", default="n")
     is_control = is_control.lower() == "y"
-    transplant_date = prompt_date("Transplant date")
+    sow_method = prompt("Sow method (transplant/direct)", default="direct")
+    if sow_method.lower() == "transplant":
+        transplant_date = prompt_date("Transplant date")
+        direct_sow_date = None
+    else:
+        direct_sow_date = prompt_date("Direct sow date")
+        transplant_date = None
     expected_harvest = prompt_date("Expected harvest date")
 
     cur.execute("""
-        INSERT INTO grow_cycles (plot_id, crop_id, status, start_date, is_control, transplant_date, expected_harvest_date)
-        VALUES (%s, %s, 'active', %s, %s, %s, %s)
-    """, (plot_id, crop_id, start_date, is_control, transplant_date, expected_harvest))
+        INSERT INTO grow_cycles (plot_id, crop_id, status, start_date, is_control, transplant_date, direct_sow_date, expected_harvest_date)
+        VALUES (%s, %s, 'active', %s, %s, %s, %s, %s)
+    """, (plot_id, crop_id, start_date, is_control, transplant_date, direct_sow_date, expected_harvest))
     close(conn, cur)
     print("  Grow cycle added successfully.")
 
