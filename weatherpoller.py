@@ -28,20 +28,20 @@ def get_weather():
     data = response.json()
     return {
         "recorded_at": datetime.now(),
-        "temp_f": data["main"]["temp"],
-        "temp_min_f": data["main"]["temp_min"],
-        "temp_max_f": data["main"]["temp_max"],
-        "feels_like_f": data["main"]["feels_like"],
-        "humidity_percent": data["main"]["humidity"],
-        "pressure_hpa": data["main"]["pressure"],
+        "temp_f": data["main"].get("temp"),
+        "temp_min_f": data["main"].get("temp_min"),
+        "temp_max_f": data["main"].get("temp_max"),
+        "feels_like_f": data["main"].get("feels_like"),
+        "humidity_percent": data["main"].get("humidity"),
+        "pressure_hpa": data["main"].get("pressure"),
         "sea_level_hpa": data["main"].get("sea_level"),
         "ground_level_hpa": data["main"].get("grnd_level"),
         "visibility_m": data.get("visibility"),
         "precip_inches": data.get("rain", {}).get("1h", 0),
         "wind_mph": data["wind"]["speed"],
-        "conditions": data["weather"][0]["description"],
-        "sunrise": datetime.fromtimestamp(data["sys"]["sunrise"]),
-        "sunset": datetime.fromtimestamp(data["sys"]["sunset"])
+        "conditions": data["weather"][0].get("description"),
+        "sunrise": datetime.fromtimestamp(data["sys"]["sunrise"]) if data["sys"].get("sunrise") else None,
+        "sunset": datetime.fromtimestamp(data["sys"]["sunset"]) if data["sys"].get("sunset") else None,
     }
 
 def insert_weather(weather):
