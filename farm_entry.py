@@ -122,12 +122,15 @@ def add_crop():
 def add_grow_cycle():
     print("\n--- Add Grow Cycle ---")
     conn, cur = connect()
-
-    print("\n  Select a plot:")
-    plot_id = list_options(cur, "plots", "id", "name")
-    if not plot_id:
-        close(conn, cur)
-        return
+    is_transplant_start = prompt("Is this starting indoors as a transplant? (y/n)", default="n")
+    if is_transplant_start.lower() == "y":
+        plot_id = None
+    else:
+        print("\n  Select a plot:")
+        plot_id = list_options(cur, "plots", "id", "name")
+        if not plot_id:
+            close(conn, cur)
+            return
 
     print("\n  Select a crop:")
     crop_id = list_options(cur, "crops", "id", "common_name")
