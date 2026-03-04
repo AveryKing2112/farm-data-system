@@ -6,8 +6,8 @@ An open source farm management and data collection system built on PostgreSQL an
 ## Why I Built This
 
 I grow using natural farming principles - specifically KNF (Korean Natural Farming) and JADAM methods. The natural farming community has a documentation problem: a lot of results are shared anecdotally. Someone applies an input, a plant responds, and 
-they assume it worked. That's cognitive bias, not evidence. But I want to be clear that I don't think KNF and JADAM are without merit - the founders of both systems are biologists who actually conducted studies when developing their inputs and methods. And Chris Trump's work documenting his macadamia nut farm in Hawaii - tracking exactly which inputs were necessary, at what ratios, and over multiple 
-seasons - is what originally pulled me into this space. He collected real data and experimented methodically. That's the standard I want to hold myself to. The problem isn't that natural farming doesn't work, it's that most people in the community aren't documenting it rigorously enough. That's what this project is trying to fix.
+they assume it worked. That's cognitive bias, not evidence. But I want to be clear that I don't think KNF and JADAM are without merit - the founders of both systems are biologists who actually conducted scientific studies when developing their methods. And Chris Trump's work documenting his macadamia nut farm in Hawaii - tracking exactly which inputs were necessary, at what ratios, and over multiple 
+seasons is what originally pulled me into this space. He collected real data and experimented methodically. That's the standard I want to hold myself to. The problem isn't that natural farming doesn't work, it's that most people in the community aren't documenting it rigorously enough. That's what this project is trying to fix.
 
 At the same time, commercial agritech solutions for soil sensors, irrigation automation, and environment monitoring are expensive and lock you into their software ecosystem. I didn't want that.
 
@@ -17,7 +17,7 @@ I'm studying Python, databases, networking, and cybersecurity at USC, and I real
 - Track genetics, growing conditions, inputs applied, and yields in a structured database so I can query and analyze results across seasons
 - Eventually replace expensive proprietary sensors with open source hardware built on Raspberry Pi
 
-This is a long term project. The goal is to build up seasons worth of real data that either proves or disproves what natural farming practitioners claim their inputs do.
+This is a long term project. The goal is to build up seasons worth of real data that either proves or disproves what natural farming claim its inputs do.
 
 ---
 
@@ -89,7 +89,7 @@ This is a long term project. The goal is to build up seasons worth of real data 
 
 ## Philosophy
 
-Most small scale farmers don't document enough. Most programmers don't farm or understand soil biology. This project sits at that intersection and tries to bring the rigor of data collection to practices that deserve more than anecdotal evidence. Everything here is open source because the point is to build something anyone can replicate, modify, and improve on their own land with their own data.
+Most small scale farmers in my opinion don't document enough. Most programmers don't farm or understand soil biology. This project sits at that intersection and tries to bring the rigor of data collection to practices that deserve more than basic evidence. Everything here is open source because the point is to build something anyone can replicate, modify, and improve on their own land with their own data. Thats what farming is to me... Freedom. and with our current structure that very freedom is being ripped away from farmers around the world.
 
 ---
 
