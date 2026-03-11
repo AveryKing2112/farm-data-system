@@ -104,6 +104,7 @@ def add_crop():
     common_name = prompt("Common name (e.g. Basil)")
     variety = prompt("Variety (e.g. Scarlet Nantes)", required=False)
     species = prompt("Species (Latin name, e.g. Ocimum basilcum)", required=False)
+    source_type = prompt("Source type (seed_packet/saved_seed/volunteer/wild/potted/trade)", required=False)
     seed_source = prompt("Seed source", required=False)
     days_to_maturity = prompt_float("Days to maturity")
     perennial = prompt("Is this a perennial? (y/n)", default="n")
@@ -111,9 +112,9 @@ def add_crop():
 
     conn, cur = connect()
     cur.execute("""
-        INSERT INTO crops (common_name, variety, species, seed_source, days_to_maturity, is_perennial, notes)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
-    """, (common_name, variety, species, seed_source, days_to_maturity, perennial.lower() == "y", notes))
+        INSERT INTO crops (common_name, variety, species, seed_source, days_to_maturity, is_perennial, source_type, notes)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+    """, (common_name, variety, species, seed_source, days_to_maturity, perennial.lower() == "y", source_type, notes))
     close(conn, cur)
     print(f"  Crop '{common_name} - {variety}' added successfully.")
 
@@ -138,15 +139,18 @@ def add_grow_cycle():
         close(conn, cur)
         return
 
-    start_date = prompt_date("Start date", required=True)
+    start_date = prompt_date("Start date( leave blank if unknown/wild)")
     is_control = prompt("Is this a control group? (y/n)", default="n")
     is_control = is_control.lower() == "y"
-    sow_method = prompt("Sow method (transplant/direct)", default="direct")
+    sow_method = prompt("Sow method (transplant/direct/potted/vounteer/wild)", default="direct")
     if sow_method.lower() == "transplant":
         transplant_date = prompt_date("Transplant date")
         direct_sow_date = None
-    else:
+    elif sow_method.lower() == "direct":
         direct_sow_date = prompt_date("Direct sow date")
+        transplant_date = None
+    else:
+        direct_sow_date = None
         transplant_date = None
     expected_harvest = prompt_date("Expected harvest date")
 
