@@ -155,9 +155,9 @@ def add_grow_cycle():
     expected_harvest = prompt_date("Expected harvest date")
 
     cur.execute("""
-        INSERT INTO grow_cycles (plot_id, crop_id, status, start_date, is_control, transplant_date, direct_sow_date, expected_harvest_date)
-        VALUES (%s, %s, 'active', %s, %s, %s, %s, %s)
-    """, (plot_id, crop_id, start_date, is_control, transplant_date, direct_sow_date, expected_harvest))
+        INSERT INTO grow_cycles (plot_id, crop_id, status, start_date, is_control, sow_method, transplant_date, direct_sow_date, expected_harvest_date)
+        VALUES (%s, %s, 'active', %s, %s, %s, %s, %s, %s)
+    """, (plot_id, crop_id, start_date, is_control, sow_method, transplant_date, direct_sow_date, expected_harvest))
     close(conn, cur)
     print("  Grow cycle added successfully.")
 
@@ -243,6 +243,65 @@ def log_input():
     close(conn, cur)
     print("  Input logged successfully.")
 
+# ── Add Ferments ──────────────────────────────────────
+
+def add_ferment():
+    print("\n--- Add Ferment ---")
+    name = prompt("Ferment name (e.g. IMO Batch 1, LABS March)")
+    ferment_type = prompt("Ferment type (e.g. IMO-1, LABS, FPJ, FFJ, FAA)")
+    stage = prompt("Current stage (e.g. rice collection, milk addition, brown sugar)")
+    started_at = prompt_date("Start date", required=True)
+    vessel_size = prompt("Vessel size (e.g. 1 gallon jar, 5 gallon bucket)", required=False)
+    notes = prompt("Notes (ingredients, ratios, location)", required=False)
+
+    conn, cur = connect()
+    cur.execute("""
+        INSERT INTO "Main".ferments (name, ferment_type, stage, started_at, status, vessel_size, notes)
+        VALUES (%s, %s, %s, %s, 'active', %s, %s)
+    """, (name, ferment_type, stage, started_at, vessel_size, notes))
+    close(conn, cur)
+    print(f"  Ferment '{name}' added successfully.")
+
+# ── Log Ferments ──────────────────────────────────────
+
+def log_ferment():
+    print("\n--- Log Ferment Observation ---")
+    conn, cur = connect()
+
+    cur.execute("""
+        SELECT id, name || ' - ' || ferment_type || ' (' || stage || ')'
+        FROM "Main".ferments
+        WHERE status = 'active'
+    """)
+    rows = cur.fetchall()
+    if not rows:
+        print("  No active ferments found.")
+        close(conn, cur)
+        return
+    print("\n  Active ferments:")
+    for row in rows:
+        print(f"    {row[0]}. {row[1]}")
+    ferment_id = int(input("  Enter ID: ").strip())
+
+    stage = prompt("Current stage (leave blank if unchanged)", required=False)
+    temp_f = prompt_float("Temperature (F, if applicable)")
+    action_taken = prompt("Action taken (e.g. turned, added milk, strained)", required=False)
+    observations = prompt("Observations (smell, color, texture, mycelium coverage)", required=False)
+    notes = prompt("Notes", required=False)
+
+    cur.execute("""
+        INSERT INTO "Main".ferment_logs (ferment_id, logged_at, stage, temp_f, action_taken, observations, notes)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+    """, (ferment_id, datetime.now(), stage, temp_f, action_taken, observations, notes))
+
+    if stage:
+        cur.execute("""
+            UPDATE "Main".ferments SET stage = %s WHERE id = %s
+        """, (stage, ferment_id))
+
+    close(conn, cur)
+    print("  Ferment log entry saved.")
+
 # ── Main Menu ──────────────────────────────────────────────
 
 def main():
@@ -256,7 +315,9 @@ def main():
         print("  3. Add Grow Cycle")
         print("  4. Log Observation")
         print("  5. Log Input Applied")
-        print("  6. Exit")
+        print("  6. Add Ferment")
+        print("  7. Log Ferment Observation")
+        print("  8. Exit")
 
         choice = input("\nEnter choice (1-6): ").strip()
 
@@ -271,10 +332,14 @@ def main():
         elif choice == "5":
             log_input()
         elif choice == "6":
+            add_ferment()
+        elif choice == "7":
+            log_ferment()
+        elif choice == "8":
             print("\nGoodbye!\n")
             break
         else:
-            print("  Invalid choice, please enter 1-6.")
+            print("  Invalid choice, please enter 1-8.")
 
 if __name__ == "__main__":
     main()
