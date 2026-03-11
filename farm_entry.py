@@ -165,11 +165,11 @@ def log_observation():
 
     print("\n  Select a grow cycle:")
     cur.execute(f"""
-        SELECT gc.id, c.common_name || ' - ' || p.name
-        FROM "{SCHEMA}".grow_cycles gc
-        JOIN "{SCHEMA}".crops c ON gc.crop_id = c.id
-        JOIN "{SCHEMA}".plots p ON gc.plot_id = p.id
-        WHERE gc.status = 'active'
+    SELECT gc.id, c.common_name || ' - ' || COALESCE(p.name, 'Indoor Start'), gc.is_control
+    FROM "{SCHEMA}".grow_cycles gc
+    JOIN "{SCHEMA}".crops c ON gc.crop_id = c.id
+    LEFT JOIN "{SCHEMA}".plots p ON gc.plot_id = p.id
+    WHERE gc.status = 'active'
     """)
     rows = cur.fetchall()
     if not rows:
@@ -177,15 +177,22 @@ def log_observation():
         close(conn, cur)
         return
     for row in rows:
-        print(f"    {row[0]}. {row[1]}")
+        control_label = " [CONTROL]" if row[2] else ""
+        print(f"    {row[0]}. {row[1]}{control_label}")
     gc_id = int(input("  Enter ID: ").strip())
 
-    print("\n  Observation types: visual, height_cm, yield_grams, brix, pest, disease, other")
+    print("\n  Observation types: germinated, sprouted, visual, height_cm, yield_grams, brix, pest, disease, other")
     obs_type = prompt("Observation type")
-    value_numeric = prompt_float("Numeric value (if applicable)")
-    value_text = prompt("Text observation", required=False)
-    notes = prompt("Notes", required=False)
-    plant_label = prompt("Plant label (e.g. plant 1, or leave blank for whole row)", required=False)
+    if obs_type.lower() in ["germinated", "sprouted"]:
+        value_text = "true"
+        value_numeric = None
+        notes = prompt("Notes (e.g which plant, any observations)", required=False)
+        plant_label = prompt("Plant label (e.g plant 1, or leave blank for whole row)", required=False)
+    else:
+        value_numeric = prompt_float("Numeric value (if applicable)")
+        value_text = prompt("Text observation", required=False)
+        notes = prompt("Notes", required=False)
+        plant_label = prompt("Plant label (e.g. plant 1, or leave blank for whole row)", required=False)
     
     cur.execute("""
         INSERT INTO observations (grow_cycle_id, observed_at, observation_type, value_numeric, value_text, plant_label, notes)
