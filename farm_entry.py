@@ -128,13 +128,13 @@ def add_grow_cycle():
         plot_id = None
     else:
         print("\n  Select a plot:")
-        plot_id = list_options(cur, "plots", "id", "name")
+        plot_id = list_options(cur, "plots", "plot_id", "name")
         if not plot_id:
             close(conn, cur)
             return
 
     print("\n  Select a crop:")
-    crop_id = list_options(cur, "crops", "id", "common_name")
+    crop_id = list_options(cur, "crops", "crop_id", "common_name")
     if not crop_id:
         close(conn, cur)
         return
@@ -169,10 +169,10 @@ def log_observation():
 
     print("\n  Select a grow cycle:")
     cur.execute(f"""
-    SELECT gc.id, c.common_name || ' - ' || COALESCE(p.name, 'Indoor Start'), gc.is_control
+    SELECT gc.grow_cycle_id, c.common_name || ' - ' || COALESCE(p.name, 'Indoor Start'), gc.is_control
     FROM "{SCHEMA}".grow_cycles gc
-    JOIN "{SCHEMA}".crops c ON gc.crop_id = c.id
-    LEFT JOIN "{SCHEMA}".plots p ON gc.plot_id = p.id
+    JOIN "{SCHEMA}".crops c ON gc.crop_id = c.crop_id
+    LEFT JOIN "{SCHEMA}".plots p ON gc.plot_id = p.plot_id
     WHERE gc.status = 'active'
     """)
     rows = cur.fetchall()
@@ -213,10 +213,10 @@ def log_input():
 
     print("\n  Select a grow cycle:")
     cur.execute(f"""
-        SELECT gc.id, c.common_name || ' - ' || p.name
+        SELECT gc.grow_cycle_id, c.common_name || ' - ' || COALESCE(p.name, 'Indoor Start')
         FROM "{SCHEMA}".grow_cycles gc
-        JOIN "{SCHEMA}".crops c ON gc.crop_id = c.id
-        JOIN "{SCHEMA}".plots p ON gc.plot_id = p.id
+        JOIN "{SCHEMA}".crops c ON gc.crop_id = c.crop_id
+        LEFT JOIN "{SCHEMA}".plots p ON gc.plot_id = p.plot_id
         WHERE gc.status = 'active'
     """)
     rows = cur.fetchall()
@@ -269,7 +269,7 @@ def log_ferment():
     conn, cur = connect()
 
     cur.execute("""
-        SELECT id, name || ' - ' || ferment_type || ' (' || stage || ')'
+        SELECT ferment_id, name || ' - ' || ferment_type || ' (' || stage || ')'
         FROM "Main".ferments
         WHERE status = 'active'
     """)
@@ -296,11 +296,130 @@ def log_ferment():
 
     if stage:
         cur.execute("""
-            UPDATE "Main".ferments SET stage = %s WHERE id = %s
+            UPDATE "Main".ferments SET stage = %s WHERE ferment_id = %s
         """, (stage, ferment_id))
 
     close(conn, cur)
     print("  Ferment log entry saved.")
+
+    # ── Initialize Physical Grid ─────────────────────────────────
+
+def initialize_grid():
+    print("\n--- Initialize Physical Grid ---")
+    conn, cur = connect()
+
+    # 1. Select the Grow Cycle (borrowing your exact logic)
+    print("\n  Select a grow cycle:")
+    cur.execute(f"""
+        SELECT gc.grow_cycle_id, c.common_name || ' - ' || COALESCE(p.name, 'Indoor Start')
+        FROM "{SCHEMA}".grow_cycles gc
+        JOIN "{SCHEMA}".crops c ON gc.crop_id = c.crop_id
+        LEFT JOIN "{SCHEMA}".plots p ON gc.plot_id = p.plot_id
+        WHERE gc.status = 'active'
+    """)
+    rows = cur.fetchall()
+    if not rows:
+        print("  No active grow cycles found.")
+        close(conn, cur)
+        return
+    for row in rows:
+        print(f"    {row[0]}. {row[1]}")
+    
+    try:
+        gc_id = int(input("  Enter ID: ").strip())
+    except ValueError:
+        print("  Invalid ID.")
+        close(conn, cur)
+        return
+
+    # 2. Get Grid Dimensions
+    num_rows = int(prompt_float("How many rows?", required=True))
+    plants_per_row = int(prompt_float("How many plants per row?", required=True))
+
+    print(f"\n  Generating {num_rows * plants_per_row} individual plant records...")
+
+    # 3. Insert into the cycle_plants table
+    insert_query = f"""
+        INSERT INTO "{SCHEMA}".cycle_plants (grow_cycle_id, row_num, pos_num, status)
+        VALUES (%s, %s, %s, 'Alive')
+    """
+    for row in range(1, num_rows + 1):
+        for pos in range(1, plants_per_row + 1):
+            cur.execute(insert_query, (gc_id, row, pos))
+
+    close(conn, cur)
+    print("  Grid initialized successfully!")
+
+# ── Log Specific Plant Observation ───────────────────────────
+
+def log_specific_plant():
+    print("\n--- Log Specific Plant Observation ---")
+    conn, cur = connect()
+
+    # 1. Select the Grow Cycle
+    print("\n  Select a grow cycle:")
+    cur.execute(f"""
+        SELECT gc.grow_cycle_id, c.common_name || ' - ' || COALESCE(p.name, 'Indoor Start')
+        FROM "{SCHEMA}".grow_cycles gc
+        JOIN "{SCHEMA}".crops c ON gc.crop_id = c.crop_id
+        LEFT JOIN "{SCHEMA}".plots p ON gc.plot_id = p.plot_id
+        WHERE gc.status = 'active'
+    """)
+    rows = cur.fetchall()
+    if not rows:
+        print("  No active grow cycles found.")
+        close(conn, cur)
+        return
+    for row in rows:
+        print(f"    {row[0]}. {row[1]}")
+        
+    try:
+        gc_id = int(input("  Enter ID: ").strip())
+    except ValueError:
+        print("  Invalid ID.")
+        close(conn, cur)
+        return
+
+    # 2. Find the coordinates
+    row_num = int(prompt_float("Row #", required=True))
+    pos_num = int(prompt_float("Position #", required=True))
+
+    # 3. Lookup the exact plant_id
+    cur.execute(f"""
+        SELECT plant_id, status FROM "{SCHEMA}".cycle_plants 
+        WHERE grow_cycle_id = %s AND row_num = %s AND pos_num = %s
+    """, (gc_id, row_num, pos_num))
+    
+    result = cur.fetchone()
+    if not result:
+        print("  Error: No plant found at those coordinates. Did you run 'Initialize Grid' for this cycle?")
+        close(conn, cur)
+        return
+        
+    plant_id = result[0]
+
+    # 4. Gather Metrics
+    health = int(prompt_float("Health Score (1-10)", required=True))
+    
+    print("\n  Stress Factors: [1] None  [2] Weather  [3] Pest  [4] Nutrient  [5] Water")
+    stress_choice = prompt("Select Stress (1-5)", default="1")
+    stress_map = {'1':'None', '2':'Weather', '3':'Pest', '4':'Nutrient', '5':'Water'}
+    stress = stress_map.get(stress_choice, 'None')
+    
+    action = prompt("Action Taken (e.g. Sprayed JLF, None)", default="None")
+    notes = prompt("Detailed Notes (e.g. True leaves emerged)", required=False)
+
+    # 5. Save to the existing observations table
+    cur.execute(f"""
+        INSERT INTO "{SCHEMA}".observations 
+        (grow_cycle_id, plant_id, observed_at, observation_type, health_score, stress_factor, action_taken, notes)
+        VALUES (%s, %s, %s, 'specific_plant', %s, %s, %s, %s)
+    """, (gc_id, plant_id, datetime.now(), health, stress, action, notes))
+
+    close(conn, cur)
+    print(f"  Observation logged successfully for Plant ID {plant_id}.")
+
+# ── Main Menu ──────────────────────────────────────────────
 
 # ── Main Menu ──────────────────────────────────────────────
 
@@ -313,13 +432,15 @@ def main():
         print("  1. Add Plot")
         print("  2. Add Crop")
         print("  3. Add Grow Cycle")
-        print("  4. Log Observation")
+        print("  4. Log Observation (General)")
         print("  5. Log Input Applied")
         print("  6. Add Ferment")
         print("  7. Log Ferment Observation")
-        print("  8. Exit")
+        print("  8. Initialize Physical Grid")
+        print("  9. Log Specific Plant (Grid Coordinates)")
+        print("  10. Exit")
 
-        choice = input("\nEnter choice (1-6): ").strip()
+        choice = input("\nEnter choice (1-10): ").strip()
 
         if choice == "1":
             add_plot()
@@ -336,10 +457,14 @@ def main():
         elif choice == "7":
             log_ferment()
         elif choice == "8":
+            initialize_grid()
+        elif choice == "9":
+            log_specific_plant()
+        elif choice == "10":
             print("\nGoodbye!\n")
             break
         else:
-            print("  Invalid choice, please enter 1-8.")
+            print("  Invalid choice, please enter 1-10.")
 
 if __name__ == "__main__":
     main()
