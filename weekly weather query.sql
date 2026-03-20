@@ -1,0 +1,1 @@
+SELECT * FROM "Main".weather_weekly ORDER BY week DESC;
