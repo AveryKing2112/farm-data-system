@@ -25,3 +25,15 @@ VALUES (
     33.0, 
     'Seedlings emerged but survived with very limited makeshift covers. Zone 8b freaks.'
 );
+
+
+
+
+
+ALTER TABLE "Main".plots RENAME COLUMN id TO plot_id;
+ALTER TABLE "Main".crops RENAME COLUMN id TO crop_id;
+ALTER TABLE "Main".grow_cycles RENAME COLUMN id TO grow_cycle_id;
+ALTER TABLE "Main".observations RENAME COLUMN id TO observation_id;
+ALTER TABLE "Main".inputs_applied RENAME COLUMN id TO input_id;
+ALTER TABLE "Main".ferments RENAME COLUMN id TO ferment_id;
+ALTER TABLE "Main".ferment_logs RENAME COLUMN id TO ferment_log_id;

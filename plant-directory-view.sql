@@ -1,0 +1,1 @@
+select * from "Main".v_plant_directory;

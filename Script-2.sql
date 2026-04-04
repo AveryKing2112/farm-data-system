@@ -1,1 +1,0 @@
-alter table inputs_log rename to inputs_inventory;
