@@ -91,7 +91,7 @@ This is a long-term project. The goal is to build up seasons' worth of data.
 
 ## Philosophy
 
-In my opinion, most small-scale farmers don't document enough, and most programmers don't farm or care about soil biology. This project sits at that intersection and tries to bring the rigor of data collection to an area that deserves more of it. Everything here is open source because the point is to build something anyone can replicate, modify, and improve on their own land with their own data.
+In my opinion, most small-scale farmers don't document enough, and most programmers don't farm or study soil biology. This project sits at that intersection and tries to bring the rigor of data collection to an area that deserves more attention. Everything here is open source because the point is to build something anyone can replicate, modify, and improve on their own land with their own data.
 
 ---
 
